@@ -22,7 +22,7 @@
 
         <provider
             android:name="android.support.v4.content.FileProvider"
-            android:authorities="me.timgu.fileprovider"
+            android:authorities="me.timgu.EngHack2019.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
