@@ -8,7 +8,6 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -17,9 +16,14 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
@@ -42,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
     static final int REQUEST_TAKE_PHOTO = 1;
 
     File mCurrentImage;
-
+    Boolean mAllergyListStarted;
     //view
     RecyclerView mRecyclerView;
     MainListAdapter mAdapter;
@@ -53,6 +57,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        mAllergyListStarted = false;
 
        FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -139,6 +145,7 @@ public class MainActivity extends AppCompatActivity {
         FirebaseVisionImage image = null;
         Uri uri = Uri.fromFile(mCurrentImage);
         final List<String> labelList = new ArrayList<>();
+
         try{
             image = FirebaseVisionImage.fromFilePath(getApplicationContext(),uri);
         } catch(IOException e){
@@ -170,9 +177,9 @@ public class MainActivity extends AppCompatActivity {
                                     public void onFailure(@NonNull Exception e) {
                                         e.printStackTrace();
                                     }
-                                });
-                                */
-        FirebaseVisionLabelDetector detector = FirebaseVision.getInstance()
+                                }); */
+
+       FirebaseVisionLabelDetector detector = FirebaseVision.getInstance()
                 .getVisionLabelDetector();
 
         Task<List<FirebaseVisionLabel>> result =
@@ -181,12 +188,16 @@ public class MainActivity extends AppCompatActivity {
                                 new OnSuccessListener<List<FirebaseVisionLabel>>() {
                                     @Override
                                     public void onSuccess(List<FirebaseVisionLabel> labels) {
+                                        String msg = "";
                                         for (FirebaseVisionLabel label:labels){
                                             String label_text = label.getLabel();
                                             String entity_id = label.getEntityId();
                                             float confidence = label.getConfidence();
+                                            msg += label_text + ",";
                                             labelList.add(label_text);
                                         }
+                                        msg = msg.substring(0,msg.length()-1);
+                                        uploadToStdlib(msg);
                                         mAdapter.updateList(labelList);
                                     }
                                 })
@@ -197,5 +208,32 @@ public class MainActivity extends AppCompatActivity {
                                         e.printStackTrace();
                                     }
                                 });
+    }
+
+    public void uploadToStdlib(String msg){
+        RequestQueue queue = Volley.newRequestQueue(this);
+        String url_base ="https://inboxes.api.stdlib.com/save-mi@dev/field_update/?food=";
+        String url = url_base + msg;
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        // Display the first 500 characters of the response string.
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+            }
+        });
+
+        queue.add(stringRequest);
+    }
+
+    public void launchAllergyActivity(MenuItem item) {
+
+        Intent intent = new Intent(this,AllergyListActivity.class);
+        startActivity(intent);
+        mAllergyListStarted = true;
     }
 }

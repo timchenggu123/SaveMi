@@ -3,7 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="me.timgu.enghack2019.MainActivity" >
     <item android:id="@+id/action_settings"
-        android:title="@string/action_settings"
+        android:title="Allergy List"
         android:orderInCategory="100"
-        app:showAsAction="never" />
+        app:showAsAction="never"
+        android:onClick="launchAllergyActivity"/>
 </menu>
