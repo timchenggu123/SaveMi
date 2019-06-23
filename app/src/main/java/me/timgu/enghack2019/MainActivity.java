@@ -1,5 +1,6 @@
 package me.timgu.enghack2019;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -9,6 +10,7 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.FileProvider;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -16,6 +18,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -43,8 +46,10 @@ import com.snapchat.kit.sdk.creative.models.SnapPhotoContent;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -56,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
     //view
     RecyclerView mRecyclerView;
     MainListAdapter mAdapter;
-
+    TextView mMainTextView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -78,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
         mAdapter = new MainListAdapter(this,new ArrayList<String>());
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mMainTextView = findViewById(R.id.main_content_textView);
     }
 
     @Override
@@ -130,7 +136,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
             imageLabelling();
-            uploadToSnapChat("Hello World");
+            requestSnapChatShare();
+
         }
     }
 
@@ -200,12 +207,20 @@ public class MainActivity extends AppCompatActivity {
                                             String label_text = label.getLabel();
                                             String entity_id = label.getEntityId();
                                             float confidence = label.getConfidence();
-                                            msg += label_text + ",";
-                                            labelList.add(label_text);
+                                            msg += checkAllergy(label_text);
+                                            //labelList.add(label_text);
                                         }
-                                        msg = msg.substring(0,msg.length()-1);
-                                        uploadToStdlib(msg);
-                                        mAdapter.updateList(labelList);
+                                        if (!msg.isEmpty()){
+                                            msg = msg.substring(0,msg.length()-1);
+                                            uploadToStdlib(msg);
+                                            mMainTextView.setText("Oops, you might be allergic!");
+                                            List<String> allergyList = new ArrayList<String>(Arrays.asList(msg.split("\\s*,\\s*")));
+                                            mAdapter.updateList(allergyList);
+                                        } else{
+                                            mMainTextView.setText("Clear! You are safe!");
+                                            mAdapter.updateList(new ArrayList<String>());
+                                        }
+
                                     }
                                 })
                         .addOnFailureListener(
@@ -217,6 +232,42 @@ public class MainActivity extends AppCompatActivity {
                                 });
     }
 
+    public String checkAllergy(String item){
+        //This method is currently hard-coded in, but once we have a mature NN we can actually implement this
+        String str = "";
+        AllergyListManager ALM = new AllergyListManager(this);
+        List<String> allergies = ALM.getAllItemsAsList();
+
+        if (item.equals("Cuisine")){
+            if (allergies.contains("fish")){
+                str += "fish,";
+            }
+            if (allergies.contains("shell")){
+                str += "shell,";
+            }
+            if (allergies.contains("shrimp")){
+                str += "shrimp,";
+            }
+        } else if (item.equals("Food")){
+            if (allergies.contains("lamb")){
+                str += "lamb,";
+            }
+            if (allergies.contains("nuts")){
+                str += "nuts,";
+            }
+        } else if (item.equals("Dessert")){
+            if (allergies.contains("diary")){
+                str += "dairy";
+            }
+            if (allergies.contains("nuts")){
+                str += "nuts";
+            }
+        }
+        if (allergies.contains(item.toLowerCase())){
+            str += item.toLowerCase() + ",";
+        }
+        return str;
+    }
     public void uploadToSnapChat(String caption){
         SnapCreativeKitApi snapCreativeKitApi = SnapCreative.getApi(this);
         SnapMediaFactory snapMediaFactory = SnapCreative.getMediaFactory(this);
@@ -257,5 +308,23 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this,AllergyListActivity.class);
         startActivity(intent);
         mAllergyListStarted = true;
+    }
+
+    private void requestSnapChatShare(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setPositiveButton("Yeah!", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                uploadToSnapChat("Hello World");
+                dialog.dismiss();
+            }
+        });
+        builder.setNegativeButton("Nah..", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                dialog.dismiss();
+            }
+        });
+        builder.setMessage("Snap it?");
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 }

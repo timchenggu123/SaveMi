@@ -11,12 +11,13 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:icon="@mipmap/save_mi_launcher"
+        android:label="Save Mi"
+        android:roundIcon="@mipmap/save_mi_launcher"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".AllergyListActivity"></activity>
+        <activity android:name=".AllergyListActivity"
+            android:label="Allergy List"></activity>
 
         <meta-data
             android:name="com.google.firebase.ml.vision.DEPENDENCIES"
@@ -27,7 +28,7 @@
 
         <activity
             android:name=".MainActivity"
-            android:label="@string/app_name"
+            android:label="Save Mi"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
