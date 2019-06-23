@@ -34,6 +34,12 @@ import com.google.firebase.ml.vision.common.FirebaseVisionImage;
 import com.google.firebase.ml.vision.label.FirebaseVisionLabel;
 import com.google.firebase.ml.vision.label.FirebaseVisionLabelDetector;
 import com.google.firebase.ml.vision.label.FirebaseVisionLabelDetectorOptions;
+import com.snapchat.kit.sdk.SnapCreative;
+import com.snapchat.kit.sdk.creative.api.SnapCreativeKitApi;
+import com.snapchat.kit.sdk.creative.exceptions.SnapMediaSizeException;
+import com.snapchat.kit.sdk.creative.media.SnapMediaFactory;
+import com.snapchat.kit.sdk.creative.media.SnapPhotoFile;
+import com.snapchat.kit.sdk.creative.models.SnapPhotoContent;
 
 import java.io.File;
 import java.io.IOException;
@@ -112,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
             // Continue only if the File was successfully created
             if (photoFile != null) {
                 Uri photoURI = FileProvider.getUriForFile(this,
-                        "me.timgu.EngHack2019.fileprovider",
+                        "me.timgu.enghack2019.fileprovider",
                         photoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
@@ -124,6 +130,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
             imageLabelling();
+            uploadToSnapChat("Hello World");
         }
     }
 
@@ -208,6 +215,21 @@ public class MainActivity extends AppCompatActivity {
                                         e.printStackTrace();
                                     }
                                 });
+    }
+
+    public void uploadToSnapChat(String caption){
+        SnapCreativeKitApi snapCreativeKitApi = SnapCreative.getApi(this);
+        SnapMediaFactory snapMediaFactory = SnapCreative.getMediaFactory(this);
+        SnapPhotoFile photoFile;
+        try {
+            photoFile = snapMediaFactory.getSnapPhotoFromFile(mCurrentImage);
+        } catch (SnapMediaSizeException e) {
+            e.printStackTrace();
+            return;
+        }
+        SnapPhotoContent snapPhotoContent = new SnapPhotoContent(photoFile);
+        snapPhotoContent.setCaptionText(caption);
+        snapCreativeKitApi.send(snapPhotoContent);
     }
 
     public void uploadToStdlib(String msg){

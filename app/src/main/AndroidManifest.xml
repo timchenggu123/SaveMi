@@ -20,7 +20,10 @@
 
         <meta-data
             android:name="com.google.firebase.ml.vision.DEPENDENCIES"
-            android:value="label" />
+            android:value="label"
+            />
+        <meta-data android:name="com.snapchat.kit.sdk.clientId"
+            android:value="8b975242-17b7-4875-8c3a-a6b962b49deb" />
 
         <activity
             android:name=".MainActivity"
@@ -35,7 +38,7 @@
 
         <provider
             android:name="android.support.v4.content.FileProvider"
-            android:authorities="me.timgu.EngHack2019.fileprovider"
+            android:authorities="me.timgu.enghack2019.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
